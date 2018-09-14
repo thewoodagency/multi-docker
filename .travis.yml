@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t thewoodagency/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run thewoodagency/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t thewoodagency/multi-client ./client
+  - docker build -t thewoodagency/multi-nginx ./nginx
+  - docker build -t thewoodagency/multi-server ./server
+  - docker build -t thewoodagency/multi-worker ./worker
+
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push thewoodagency/multi-client
+  - docker push thewoodagency/multi-nginx
+  - docker push thewoodagency/multi-server
+  - docker push thewoodagency/multi-worker
